@@ -61,31 +61,44 @@ class GameScene extends Phaser.Scene
         });
         this.updateLivesUI();
         this.restartKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        this.input.on('pointerdown', (pointer) => {
+            if (this.gameOver)
+                this.scene.restart();
+        });
+
     }
     update() {
-        if(this.gameOver)
-        {
+        if(this.gameOver) {
             if(Phaser.Input.Keyboard.JustDown(this.restartKey))
                 this.scene.restart();
             return;
         }
-        if(this.target.y>=sizes.height)
-        {
+
+        // Apple reset logic
+        if(this.target.y >= sizes.height) {
             this.target.setY(0); 
             this.target.setX(this.getRandomX());
             this.lives--;
             this.updateLivesUI();
-            if(this.lives<=0)
-                this.endGame();
+            if(this.lives <= 0) this.endGame();
         }
-        const {left,right} = this.cursor;
+
+        const { left, right } = this.cursor;
         if(left.isDown) 
             this.player.setVelocityX(-this.playerSpeed);
         else if(right.isDown)
             this.player.setVelocityX(this.playerSpeed);
         else
             this.player.setVelocityX(0);
+
+        // --- MOBILE CONTROLS ---
+        if(this.input.activePointer.isDown) {
+            // Move basket towards touch/pointer X
+            const diff = this.input.activePointer.worldX - this.player.x;
+            this.player.setVelocityX(Phaser.Math.Clamp(diff * 8, -this.playerSpeed, this.playerSpeed));
+        }
     }
+
     getRandomX()
     {
         return Math.floor(Math.random()*360);
